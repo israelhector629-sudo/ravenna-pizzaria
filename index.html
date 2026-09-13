@@ -1,0 +1,2747 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="theme-color" content="#c91524">
+
+<title>Ravenna Pizzaria • Lista de Compras</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+:root{
+    --red:#d71920;
+    --red-dark:#a80f16;
+    --red-light:#ef2939;
+
+    --green:#138a36;
+    --green-dark:#0b6427;
+    --green-light:#20ad4c;
+
+    --white:#ffffff;
+    --cream:#f7f7f7;
+
+    --dark:#101010;
+    --dark2:#171717;
+    --dark3:#202020;
+
+    --line:#303030;
+    --text:#ffffff;
+    --muted:#a9a9a9;
+
+    --shadow:0 15px 40px rgba(0,0,0,.30);
+}
+
+body{
+    font-family:'Inter',sans-serif;
+    background:
+        radial-gradient(circle at top left,rgba(215,25,32,.15),transparent 30%),
+        radial-gradient(circle at bottom right,rgba(19,138,54,.12),transparent 30%),
+        var(--dark);
+    color:var(--text);
+    min-height:100vh;
+}
+
+/* ================================
+   SPLASH
+================================ */
+
+#splash{
+    position:fixed;
+    inset:0;
+    background:
+        radial-gradient(circle,rgba(215,25,32,.20),transparent 35%),
+        var(--dark);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    transition:.5s;
+}
+
+.splash-box{
+    text-align:center;
+    animation:splashIn .8s ease;
+}
+
+.splash-icon{
+    width:110px;
+    height:110px;
+    border-radius:50%;
+    background:linear-gradient(135deg,var(--red),var(--green));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:auto;
+    font-size:58px;
+    box-shadow:
+        0 0 0 8px rgba(255,255,255,.05),
+        0 20px 60px rgba(0,0,0,.5);
+}
+
+.splash-title{
+    font-family:'Anton',sans-serif;
+    font-size:48px;
+    letter-spacing:1px;
+    margin-top:20px;
+}
+
+.splash-title span{
+    color:var(--red-light);
+}
+
+.splash-sub{
+    color:var(--muted);
+    margin-top:6px;
+}
+
+.loading{
+    width:180px;
+    height:4px;
+    background:#292929;
+    border-radius:20px;
+    overflow:hidden;
+    margin:25px auto 0;
+}
+
+.loading div{
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,var(--red),var(--green));
+    animation:loading 1.5s forwards;
+}
+
+@keyframes loading{
+    to{width:100%}
+}
+
+@keyframes splashIn{
+    from{
+        opacity:0;
+        transform:scale(.8);
+    }
+    to{
+        opacity:1;
+        transform:scale(1);
+    }
+}
+
+/* ================================
+   LOGIN
+================================ */
+
+#loginScreen{
+    min-height:100vh;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.login-box{
+    width:100%;
+    max-width:430px;
+    background:rgba(25,25,25,.95);
+    border:1px solid var(--line);
+    border-radius:25px;
+    padding:35px;
+    box-shadow:var(--shadow);
+}
+
+.login-logo{
+    width:90px;
+    height:90px;
+    margin:auto;
+    border-radius:25px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,var(--red),var(--green));
+    font-size:48px;
+}
+
+.login-title{
+    text-align:center;
+    font-family:'Anton',sans-serif;
+    font-size:36px;
+    margin-top:20px;
+}
+
+.login-title span{
+    color:var(--red-light);
+}
+
+.login-subtitle{
+    text-align:center;
+    color:var(--muted);
+    margin:5px 0 25px;
+}
+
+.input-group{
+    margin-bottom:15px;
+}
+
+.input-group label{
+    display:block;
+    font-size:13px;
+    color:#bbb;
+    margin-bottom:7px;
+}
+
+.input-group select,
+.input-group input{
+    width:100%;
+    height:50px;
+    border:1px solid #383838;
+    border-radius:12px;
+    background:#101010;
+    color:white;
+    padding:0 15px;
+    outline:none;
+    font-size:15px;
+}
+
+.input-group select:focus,
+.input-group input:focus{
+    border-color:var(--red);
+}
+
+.login-btn{
+    width:100%;
+    height:52px;
+    border:0;
+    border-radius:13px;
+    color:white;
+    font-weight:800;
+    font-size:15px;
+    cursor:pointer;
+    background:linear-gradient(135deg,var(--red),var(--red-dark));
+    transition:.2s;
+}
+
+.login-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 25px rgba(215,25,32,.25);
+}
+
+.login-error{
+    color:#ff6b6b;
+    text-align:center;
+    font-size:13px;
+    margin-top:12px;
+    display:none;
+}
+
+/* ================================
+   APP
+================================ */
+
+#app{
+    display:none;
+    min-height:100vh;
+}
+
+.app-layout{
+    display:flex;
+    min-height:100vh;
+}
+
+/* ================================
+   SIDEBAR
+================================ */
+
+.sidebar{
+    width:260px;
+    background:#111;
+    border-right:1px solid var(--line);
+    padding:22px;
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    z-index:100;
+    display:flex;
+    flex-direction:column;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding-bottom:22px;
+    border-bottom:1px solid var(--line);
+}
+
+.brand-icon{
+    width:48px;
+    height:48px;
+    border-radius:14px;
+    background:linear-gradient(135deg,var(--red),var(--green));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:25px;
+}
+
+.brand-text h1{
+    font-family:'Anton',sans-serif;
+    font-size:22px;
+    letter-spacing:.5px;
+}
+
+.brand-text h1 span{
+    color:var(--red-light);
+}
+
+.brand-text p{
+    color:#888;
+    font-size:11px;
+}
+
+.user-card{
+    margin-top:20px;
+    background:#191919;
+    border:1px solid #292929;
+    border-radius:15px;
+    padding:15px;
+}
+
+.user-name{
+    font-weight:800;
+}
+
+.user-role{
+    color:var(--green-light);
+    font-size:12px;
+    margin-top:3px;
+}
+
+.connection{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:11px;
+    color:#999;
+    margin-top:12px;
+}
+
+.connection-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#777;
+}
+
+.connection.online .connection-dot{
+    background:#20d866;
+    box-shadow:0 0 10px #20d866;
+}
+
+.logout{
+    margin-top:auto;
+    width:100%;
+    height:45px;
+    border:1px solid #3b3b3b;
+    border-radius:11px;
+    background:#191919;
+    color:#ddd;
+    cursor:pointer;
+    font-weight:700;
+}
+
+.logout:hover{
+    background:var(--red-dark);
+    border-color:var(--red);
+}
+
+/* ================================
+   CONTENT
+================================ */
+
+.main{
+    margin-left:260px;
+    width:calc(100% - 260px);
+    padding:25px;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:22px;
+}
+
+.page-title h2{
+    font-family:'Anton',sans-serif;
+    font-size:32px;
+    letter-spacing:.5px;
+}
+
+.page-title p{
+    color:#888;
+    font-size:13px;
+    margin-top:3px;
+}
+
+.mobile-menu{
+    display:none;
+}
+
+.stats{
+    display:flex;
+    gap:10px;
+}
+
+.stat{
+    background:#181818;
+    border:1px solid #292929;
+    border-radius:12px;
+    padding:10px 15px;
+    text-align:center;
+}
+
+.stat strong{
+    display:block;
+    font-size:18px;
+}
+
+.stat span{
+    font-size:10px;
+    color:#888;
+}
+
+/* ================================
+   GRID
+================================ */
+
+.content-grid{
+    display:grid;
+    grid-template-columns:1fr 420px;
+    gap:20px;
+}
+
+/* ================================
+   PANEL
+================================ */
+
+.panel{
+    background:#151515;
+    border:1px solid #292929;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 10px 35px rgba(0,0,0,.18);
+}
+
+.panel-header{
+    padding:20px;
+    border-bottom:1px solid #292929;
+}
+
+.panel-header h3{
+    font-size:18px;
+}
+
+.panel-header p{
+    color:#777;
+    font-size:12px;
+    margin-top:4px;
+}
+
+/* ================================
+   CATEGORIAS
+================================ */
+
+.categories{
+    display:flex;
+    gap:8px;
+    padding:15px;
+    overflow-x:auto;
+    border-bottom:1px solid #292929;
+}
+
+.categories::-webkit-scrollbar{
+    height:4px;
+}
+
+.categories::-webkit-scrollbar-thumb{
+    background:#333;
+}
+
+.category-btn{
+    flex-shrink:0;
+    padding:10px 15px;
+    border-radius:30px;
+    border:1px solid #333;
+    background:#1c1c1c;
+    color:#aaa;
+    cursor:pointer;
+    font-size:12px;
+    font-weight:700;
+}
+
+.category-btn.active{
+    color:white;
+    border-color:var(--red);
+    background:var(--red);
+}
+
+/* ================================
+   PRODUTOS
+================================ */
+
+.products{
+    padding:15px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:12px;
+    max-height:calc(100vh - 270px);
+    overflow-y:auto;
+}
+
+.product{
+    background:#1b1b1b;
+    border:1px solid #2d2d2d;
+    border-radius:15px;
+    padding:15px;
+    transition:.2s;
+    cursor:pointer;
+}
+
+.product:hover{
+    transform:translateY(-3px);
+    border-color:var(--green);
+}
+
+.product-icon{
+    width:50px;
+    height:50px;
+    border-radius:13px;
+    background:#242424;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:27px;
+    margin-bottom:12px;
+}
+
+.product-name{
+    font-weight:800;
+    font-size:14px;
+}
+
+.product-category{
+    color:#777;
+    font-size:11px;
+    margin-top:4px;
+}
+
+.add-product{
+    margin-top:12px;
+    width:100%;
+    height:35px;
+    border:0;
+    border-radius:9px;
+    background:var(--green);
+    color:white;
+    font-weight:800;
+    cursor:pointer;
+}
+
+/* ================================
+   LISTA
+================================ */
+
+.list-panel{
+    display:flex;
+    flex-direction:column;
+    max-height:calc(100vh - 100px);
+}
+
+.list-header{
+    padding:20px;
+    border-bottom:1px solid #292929;
+}
+
+.list-header-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.list-header h3{
+    font-size:18px;
+}
+
+.clear-btn{
+    border:1px solid #4b2525;
+    background:#241515;
+    color:#ff7373;
+    border-radius:9px;
+    padding:8px 10px;
+    font-size:11px;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.list-items{
+    padding:15px;
+    overflow-y:auto;
+    flex:1;
+}
+
+.empty{
+    text-align:center;
+    padding:60px 20px;
+    color:#666;
+}
+
+.empty-icon{
+    font-size:45px;
+    margin-bottom:12px;
+}
+
+.list-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:#1b1b1b;
+    border:1px solid #2c2c2c;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:9px;
+}
+
+.item-info{
+    flex:1;
+    min-width:0;
+}
+
+.item-name{
+    font-size:13px;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.item-category{
+    color:#777;
+    font-size:10px;
+    margin-top:2px;
+}
+
+.quantity{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.qty-btn{
+    width:28px;
+    height:28px;
+    border-radius:7px;
+    border:1px solid #333;
+    background:#242424;
+    color:white;
+    cursor:pointer;
+    font-weight:800;
+}
+
+.qty-number{
+    min-width:20px;
+    text-align:center;
+    font-weight:800;
+    font-size:13px;
+}
+
+.remove{
+    width:28px;
+    height:28px;
+    border:0;
+    border-radius:7px;
+    background:#321719;
+    color:#ff6868;
+    cursor:pointer;
+}
+
+.list-footer{
+    padding:15px;
+    border-top:1px solid #292929;
+}
+
+.obs{
+    width:100%;
+    min-height:70px;
+    resize:none;
+    border:1px solid #333;
+    border-radius:10px;
+    background:#101010;
+    color:white;
+    padding:12px;
+    outline:none;
+    font-family:inherit;
+    font-size:12px;
+}
+
+.action-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:9px;
+}
+
+.action-btn{
+    height:44px;
+    border:0;
+    border-radius:10px;
+    color:white;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.save-btn{
+    background:var(--green);
+}
+
+.whatsapp-btn{
+    background:#1fa855;
+}
+
+.action-btn:hover{
+    filter:brightness(1.1);
+}
+
+/* ================================
+   MODAL
+================================ */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    backdrop-filter:blur(5px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:20px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    width:100%;
+    max-width:400px;
+    background:#191919;
+    border:1px solid #363636;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:var(--shadow);
+    animation:modalIn .2s ease;
+}
+
+@keyframes modalIn{
+    from{
+        opacity:0;
+        transform:translateY(20px) scale(.96);
+    }
+    to{
+        opacity:1;
+        transform:none;
+    }
+}
+
+.modal-icon{
+    width:65px;
+    height:65px;
+    border-radius:17px;
+    background:#252525;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:34px;
+    margin-bottom:15px;
+}
+
+.modal-title{
+    font-size:20px;
+    font-weight:800;
+}
+
+.modal-category{
+    color:#777;
+    font-size:12px;
+    margin-top:3px;
+}
+
+.modal-input{
+    width:100%;
+    height:50px;
+    margin-top:20px;
+    border:1px solid #383838;
+    border-radius:11px;
+    background:#101010;
+    color:white;
+    padding:0 15px;
+    font-size:16px;
+    outline:none;
+}
+
+.modal-actions{
+    display:flex;
+    gap:10px;
+    margin-top:15px;
+}
+
+.modal-actions button{
+    flex:1;
+    height:45px;
+    border:0;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:800;
+}
+
+.cancel-btn{
+    background:#292929;
+    color:#ccc;
+}
+
+.confirm-btn{
+    background:var(--green);
+    color:white;
+}
+
+/* ================================
+   TOAST
+================================ */
+
+.toast{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:#202020;
+    border:1px solid #383838;
+    padding:13px 18px;
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    transform:translateY(100px);
+    opacity:0;
+    pointer-events:none;
+    transition:.3s;
+    z-index:2000;
+    font-size:13px;
+    font-weight:700;
+}
+
+.toast.show{
+    transform:translateY(0);
+    opacity:1;
+}
+
+/* ================================
+   RESPONSIVO
+================================ */
+
+@media(max-width:1000px){
+
+    .sidebar{
+        width:220px;
+    }
+
+    .main{
+        margin-left:220px;
+        width:calc(100% - 220px);
+    }
+
+    .content-grid{
+        grid-template-columns:1fr;
+    }
+
+    .list-panel{
+        max-height:none;
+    }
+
+    .products{
+        max-height:none;
+    }
+}
+
+@media(max-width:700px){
+
+    .sidebar{
+        transform:translateX(-100%);
+        transition:.3s;
+        width:270px;
+    }
+
+    .sidebar.open{
+        transform:translateX(0);
+    }
+
+    .main{
+        margin-left:0;
+        width:100%;
+        padding:15px;
+    }
+
+    .mobile-menu{
+        display:flex;
+        width:42px;
+        height:42px;
+        border:1px solid #333;
+        background:#191919;
+        color:white;
+        border-radius:10px;
+        align-items:center;
+        justify-content:center;
+        font-size:20px;
+        cursor:pointer;
+    }
+
+    .topbar{
+        align-items:flex-start;
+    }
+
+    .stats{
+        display:none;
+    }
+
+    .page-title{
+        flex:1;
+    }
+
+    .page-title h2{
+        font-size:25px;
+    }
+
+    .products{
+        grid-template-columns:repeat(2,1fr);
+        padding:10px;
+    }
+
+    .product{
+        padding:12px;
+    }
+
+    .product-icon{
+        width:43px;
+        height:43px;
+        font-size:23px;
+    }
+
+    .product-name{
+        font-size:12px;
+    }
+
+    .action-buttons{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:400px){
+
+    .products{
+        grid-template-columns:1fr 1fr;
+        gap:8px;
+    }
+
+    .product-name{
+        font-size:11px;
+    }
+
+    .splash-title{
+        font-size:38px;
+    }
+
+    .login-box{
+        padding:25px 20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================================
+     SPLASH
+================================ -->
+
+<div id="splash">
+
+    <div class="splash-box">
+
+        <div class="splash-icon">
+            🍕
+        </div>
+
+        <div class="splash-title">
+            <span>Ravenna</span> Pizzaria
+        </div>
+
+        <div class="splash-sub">
+            Lista de Compras
+        </div>
+
+        <div class="loading">
+            <div></div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================================
+     LOGIN
+================================ -->
+
+<section id="loginScreen">
+
+    <div class="login-box">
+
+        <div class="login-logo">
+            🍕
+        </div>
+
+        <div class="login-title">
+            <span>Ravenna</span>
+        </div>
+
+        <div class="login-subtitle">
+            Lista de Compras
+        </div>
+
+        <div class="input-group">
+
+            <label>Funcionário</label>
+
+            <select id="usuario">
+                <option value="">Selecione seu nome</option>
+            </select>
+
+        </div>
+
+        <div class="input-group">
+
+            <label>Senha</label>
+
+            <input
+                type="password"
+                id="senha"
+                placeholder="Digite sua senha"
+            >
+
+        </div>
+
+        <button
+            class="login-btn"
+            onclick="entrar()"
+        >
+            ENTRAR
+        </button>
+
+        <div
+            class="login-error"
+            id="loginError"
+        >
+            Usuário ou senha incorretos.
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ================================
+     APP
+================================ -->
+
+<div id="app">
+
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar" id="sidebar">
+
+            <div class="brand">
+
+                <div class="brand-icon">
+                    🍕
+                </div>
+
+                <div class="brand-text">
+
+                    <h1>
+                        <span>Ravenna</span>
+                    </h1>
+
+                    <p>Pizzaria</p>
+
+                </div>
+
+            </div>
+
+            <div class="user-card">
+
+                <div
+                    class="user-name"
+                    id="userName"
+                >
+                    —
+                </div>
+
+                <div
+                    class="user-role"
+                    id="userRole"
+                >
+                    —
+                </div>
+
+                <div
+                    class="connection"
+                    id="connection"
+                >
+
+                    <span class="connection-dot"></span>
+
+                    <span id="connectionText">
+                        Conectando...
+                    </span>
+
+                </div>
+
+            </div>
+
+            <button
+                class="logout"
+                onclick="sair()"
+            >
+                🚪 Sair
+            </button>
+
+        </aside>
+
+        <!-- MAIN -->
+
+        <main class="main">
+
+            <div class="topbar">
+
+                <button
+                    class="mobile-menu"
+                    onclick="toggleSidebar()"
+                >
+                    ☰
+                </button>
+
+                <div class="page-title">
+
+                    <h2>
+                        Lista de Compras
+                    </h2>
+
+                    <p>
+                        Organize os produtos da Ravenna Pizzaria
+                    </p>
+
+                </div>
+
+                <div class="stats">
+
+                    <div class="stat">
+
+                        <strong id="totalItens">
+                            0
+                        </strong>
+
+                        <span>Itens</span>
+
+                    </div>
+
+                    <div class="stat">
+
+                        <strong id="totalQuantidade">
+                            0
+                        </strong>
+
+                        <span>Qtd.</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="content-grid">
+
+                <!-- PRODUTOS -->
+
+                <section class="panel">
+
+                    <div class="panel-header">
+
+                        <h3>
+                            🛒 Produtos
+                        </h3>
+
+                        <p>
+                            Selecione um produto para adicionar
+                        </p>
+
+                    </div>
+
+                    <div
+                        class="categories"
+                        id="categories"
+                    ></div>
+
+                    <div
+                        class="products"
+                        id="products"
+                    ></div>
+
+                </section>
+
+                <!-- LISTA -->
+
+                <section class="panel list-panel">
+
+                    <div class="list-header">
+
+                        <div class="list-header-top">
+
+                            <h3>
+                                📋 Minha Lista
+                            </h3>
+
+                            <button
+                                class="clear-btn"
+                                onclick="limparLista()"
+                            >
+                                LIMPAR
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="list-items"
+                        id="listItems"
+                    ></div>
+
+                    <div class="list-footer">
+
+                        <textarea
+                            class="obs"
+                            id="observacao"
+                            placeholder="Observações para o pedido..."
+                        ></textarea>
+
+                        <div class="action-buttons">
+
+                            <button
+                                class="action-btn save-btn"
+                                onclick="salvarDados()"
+                            >
+                                💾 SALVAR
+                            </button>
+
+                            <button
+                                class="action-btn whatsapp-btn"
+                                onclick="enviarWhatsApp()"
+                            >
+                                📲 WHATSAPP
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </main>
+
+    </div>
+
+</div>
+
+<!-- ================================
+     MODAL
+================================ -->
+
+<div
+    class="modal"
+    id="modal"
+>
+
+    <div class="modal-box">
+
+        <div
+            class="modal-icon"
+            id="modalIcon"
+        >
+            🍕
+        </div>
+
+        <div
+            class="modal-title"
+            id="modalTitle"
+        >
+            Produto
+        </div>
+
+        <div
+            class="modal-category"
+            id="modalCategory"
+        >
+            Categoria
+        </div>
+
+        <input
+            class="modal-input"
+            type="number"
+            id="modalQuantity"
+            min="1"
+            value="1"
+            placeholder="Quantidade"
+        >
+
+        <div class="modal-actions">
+
+            <button
+                class="cancel-btn"
+                onclick="fecharModal()"
+            >
+                CANCELAR
+            </button>
+
+            <button
+                class="confirm-btn"
+                onclick="confirmarProduto()"
+            >
+                ADICIONAR
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- TOAST -->
+
+<div
+    class="toast"
+    id="toast"
+></div>
+
+<script>
+
+/* =========================================================
+   FIREBASE RAVENNA
+========================================================= */
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyC9Bpq3ayw8qDMrAY_i3JWxFYrC41N9BMc",
+
+    authDomain:
+        "ravenna-pizzaria-7c013.firebaseapp.com",
+
+    databaseURL:
+        "https://ravenna-pizzaria-7c013-default-rtdb.firebaseio.com",
+
+    projectId:
+        "ravenna-pizzaria-7c013",
+
+    storageBucket:
+        "ravenna-pizzaria-7c013.firebasestorage.app",
+
+    messagingSenderId:
+        "389268176176",
+
+    appId:
+        "1:389268176176:web:c7fb1165185ee203385cf5",
+
+    measurementId:
+        "G-XY24D4ECQ6"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const database = firebase.database();
+
+/*
+    Banco exclusivo da Ravenna.
+    O Caverna do Dino NÃO será alterado.
+*/
+
+const listaRef =
+    database.ref("ravennaListaCompras");
+
+
+/* =========================================================
+   CONFIGURAÇÕES
+========================================================= */
+
+const numeroWhatsApp =
+    "5516988291300";
+
+
+/* =========================================================
+   FUNCIONÁRIOS
+========================================================= */
+
+const funcionarios = {
+
+    "Lukinhas":{
+        senha:"1234",
+        cargo:"Funcionário"
+    },
+
+    "Israel":{
+        senha:"1234",
+        cargo:"Administrador"
+    },
+
+    "Elbert":{
+        senha:"1234",
+        cargo:"Funcionário"
+    },
+
+    "Leandro":{
+        senha:"1234",
+        cargo:"Funcionário"
+    }
+
+};
+
+
+/* =========================================================
+   PRODUTOS
+========================================================= */
+
+const produtos = [
+
+    /* PADARIA */
+
+    {
+        nome:"Pão francês",
+        categoria:"Padaria",
+        emoji:"🥖"
+    },
+
+    {
+        nome:"Pão de hambúrguer",
+        categoria:"Padaria",
+        emoji:"🍔"
+    },
+
+    {
+        nome:"Pão de hot dog",
+        categoria:"Padaria",
+        emoji:"🌭"
+    },
+
+    /* MASSAS */
+
+    {
+        nome:"Farinha de trigo",
+        categoria:"Massas",
+        emoji:"🌾"
+    },
+
+    {
+        nome:"Farinha de milho",
+        categoria:"Massas",
+        emoji:"🌽"
+    },
+
+    {
+        nome:"Massa de pizza",
+        categoria:"Massas",
+        emoji:"🍕"
+    },
+
+    {
+        nome:"Fermento",
+        categoria:"Massas",
+        emoji:"🧂"
+    },
+
+    /* CARNES */
+
+    {
+        nome:"Calabresa",
+        categoria:"Carnes",
+        emoji:"🥩"
+    },
+
+    {
+        nome:"Frango",
+        categoria:"Carnes",
+        emoji:"🍗"
+    },
+
+    {
+        nome:"Bacon",
+        categoria:"Carnes",
+        emoji:"🥓"
+    },
+
+    {
+        nome:"Carne bovina",
+        categoria:"Carnes",
+        emoji:"🥩"
+    },
+
+    {
+        nome:"Linguiça",
+        categoria:"Carnes",
+        emoji:"🌭"
+    },
+
+    /* LATICÍNIOS */
+
+    {
+        nome:"Mussarela",
+        categoria:"Laticínios",
+        emoji:"🧀"
+    },
+
+    {
+        nome:"Catupiry",
+        categoria:"Laticínios",
+        emoji:"🧀"
+    },
+
+    {
+        nome:"Parmesão",
+        categoria:"Laticínios",
+        emoji:"🧀"
+    },
+
+    {
+        nome:"Requeijão",
+        categoria:"Laticínios",
+        emoji:"🥛"
+    },
+
+    /* HORTIFRUTI */
+
+    {
+        nome:"Tomate",
+        categoria:"Hortifruti",
+        emoji:"🍅"
+    },
+
+    {
+        nome:"Cebola",
+        categoria:"Hortifruti",
+        emoji:"🧅"
+    },
+
+    {
+        nome:"Alho",
+        categoria:"Hortifruti",
+        emoji:"🧄"
+    },
+
+    {
+        nome:"Pimentão",
+        categoria:"Hortifruti",
+        emoji:"🫑"
+    },
+
+    {
+        nome:"Alface",
+        categoria:"Hortifruti",
+        emoji:"🥬"
+    },
+
+    {
+        nome:"Batata",
+        categoria:"Hortifruti",
+        emoji:"🥔"
+    },
+
+    /* BEBIDAS */
+
+    {
+        nome:"Coca-Cola",
+        categoria:"Bebidas",
+        emoji:"🥤"
+    },
+
+    {
+        nome:"Guaraná",
+        categoria:"Bebidas",
+        emoji:"🥤"
+    },
+
+    {
+        nome:"Água",
+        categoria:"Bebidas",
+        emoji:"💧"
+    },
+
+    {
+        nome:"Suco",
+        categoria:"Bebidas",
+        emoji:"🧃"
+    },
+
+    /* MERCEARIA */
+
+    {
+        nome:"Molho de tomate",
+        categoria:"Mercearia",
+        emoji:"🍅"
+    },
+
+    {
+        nome:"Milho",
+        categoria:"Mercearia",
+        emoji:"🌽"
+    },
+
+    {
+        nome:"Ervilha",
+        categoria:"Mercearia",
+        emoji:"🫛"
+    },
+
+    {
+        nome:"Azeitona",
+        categoria:"Mercearia",
+        emoji:"🫒"
+    },
+
+    {
+        nome:"Orégano",
+        categoria:"Mercearia",
+        emoji:"🌿"
+    },
+
+    {
+        nome:"Sal",
+        categoria:"Mercearia",
+        emoji:"🧂"
+    },
+
+    {
+        nome:"Açúcar",
+        categoria:"Mercearia",
+        emoji:"🍚"
+    },
+
+    {
+        nome:"Óleo",
+        categoria:"Mercearia",
+        emoji:"🫗"
+    },
+
+    /* EMBALAGENS */
+
+    {
+        nome:"Caixa de pizza",
+        categoria:"Embalagens",
+        emoji:"📦"
+    },
+
+    {
+        nome:"Sacola",
+        categoria:"Embalagens",
+        emoji:"🛍️"
+    },
+
+    {
+        nome:"Pote",
+        categoria:"Embalagens",
+        emoji:"🥡"
+    },
+
+    {
+        nome:"Guardanapo",
+        categoria:"Embalagens",
+        emoji:"🧻"
+    },
+
+    {
+        nome:"Papel alumínio",
+        categoria:"Embalagens",
+        emoji:"🧻"
+    },
+
+    /* LIMPEZA */
+
+    {
+        nome:"Detergente",
+        categoria:"Limpeza",
+        emoji:"🧴"
+    },
+
+    {
+        nome:"Desinfetante",
+        categoria:"Limpeza",
+        emoji:"🧼"
+    },
+
+    {
+        nome:"Água sanitária",
+        categoria:"Limpeza",
+        emoji:"🧴"
+    },
+
+    {
+        nome:"Esponja",
+        categoria:"Limpeza",
+        emoji:"🧽"
+    },
+
+    {
+        nome:"Papel toalha",
+        categoria:"Limpeza",
+        emoji:"🧻"
+    },
+
+    {
+        nome:"Saco de lixo",
+        categoria:"Limpeza",
+        emoji:"🗑️"
+    }
+
+];
+
+
+/* =========================================================
+   VARIÁVEIS
+========================================================= */
+
+let usuarioAtual = null;
+
+let lista = [];
+
+let categoriaAtual = "Todos";
+
+let produtoSelecionado = null;
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+function carregarFuncionarios(){
+
+    const select =
+        document.getElementById("usuario");
+
+    Object.keys(funcionarios).forEach(nome => {
+
+        const option =
+            document.createElement("option");
+
+        option.value = nome;
+
+        option.textContent = nome;
+
+        select.appendChild(option);
+
+    });
+
+}
+
+
+/* =========================================================
+   ENTRAR
+========================================================= */
+
+function entrar(){
+
+    const nome =
+        document.getElementById("usuario").value;
+
+    const senha =
+        document.getElementById("senha").value;
+
+    const erro =
+        document.getElementById("loginError");
+
+    if(
+        !nome ||
+        !funcionarios[nome] ||
+        funcionarios[nome].senha !== senha
+    ){
+
+        erro.style.display = "block";
+
+        return;
+
+    }
+
+    erro.style.display = "none";
+
+    usuarioAtual = {
+
+        nome:name = nome,
+
+        cargo:funcionarios[nome].cargo
+
+    };
+
+    localStorage.setItem(
+        "ravenna_pizzaria_usuario",
+        JSON.stringify(usuarioAtual)
+    );
+
+    document.getElementById("loginScreen").style.display =
+        "none";
+
+    document.getElementById("app").style.display =
+        "block";
+
+    document.getElementById("userName").textContent =
+        nome;
+
+    document.getElementById("userRole").textContent =
+        funcionarios[nome].cargo;
+
+    iniciarFirebase();
+
+    renderCategorias();
+
+    renderProdutos();
+
+    renderLista();
+
+}
+
+
+/* =========================================================
+   SAIR
+========================================================= */
+
+function sair(){
+
+    pararFirebase();
+
+    localStorage.removeItem(
+        "ravenna_pizzaria_usuario"
+    );
+
+    usuarioAtual = null;
+
+    lista = [];
+
+    document.getElementById("app").style.display =
+        "none";
+
+    document.getElementById("loginScreen").style.display =
+        "flex";
+
+    document.getElementById("senha").value = "";
+
+}
+
+
+/* =========================================================
+   FIREBASE
+========================================================= */
+
+let firebaseAtivo = false;
+
+function iniciarFirebase(){
+
+    if(firebaseAtivo)
+        return;
+
+    firebaseAtivo = true;
+
+    listaRef.on(
+        "value",
+        receberDadosFirebase
+    );
+
+    database.ref(".info/connected").on(
+        "value",
+        snapshot => {
+
+            const conectado =
+                snapshot.val() === true;
+
+            const connection =
+                document.getElementById("connection");
+
+            const text =
+                document.getElementById("connectionText");
+
+            if(conectado){
+
+                connection.classList.add("online");
+
+                text.textContent =
+                    "Online";
+
+            }else{
+
+                connection.classList.remove("online");
+
+                text.textContent =
+                    "Offline";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   PARAR FIREBASE
+========================================================= */
+
+function pararFirebase(){
+
+    if(!firebaseAtivo)
+        return;
+
+    listaRef.off();
+
+    firebaseAtivo = false;
+
+}
+
+
+/* =========================================================
+   RECEBER DADOS
+========================================================= */
+
+function receberDadosFirebase(snapshot){
+
+    const dados = snapshot.val();
+
+    if(!dados){
+
+        lista = [];
+
+        renderLista();
+
+        return;
+
+    }
+
+    lista =
+        Array.isArray(dados)
+        ? dados
+        : Object.values(dados);
+
+    renderLista();
+
+}
+
+
+/* =========================================================
+   SALVAR
+========================================================= */
+
+function salvarDados(){
+
+    listaRef.set(lista)
+        .then(() => {
+
+            mostrarToast(
+                "Lista salva com sucesso!"
+            );
+
+        })
+        .catch(error => {
+
+            console.error(error);
+
+            mostrarToast(
+                "Erro ao salvar lista."
+            );
+
+        });
+
+}
+
+
+/* =========================================================
+   CATEGORIAS
+========================================================= */
+
+function renderCategorias(){
+
+    const container =
+        document.getElementById("categories");
+
+    const categorias = [
+        "Todos",
+        ...new Set(
+            produtos.map(
+                produto => produto.categoria
+            )
+        )
+    ];
+
+    container.innerHTML = "";
+
+    categorias.forEach(categoria => {
+
+        const button =
+            document.createElement("button");
+
+        button.className =
+            "category-btn " +
+            (categoria === categoriaAtual
+                ? "active"
+                : "");
+
+        button.textContent =
+            categoria;
+
+        button.onclick = () => {
+
+            categoriaAtual =
+                categoria;
+
+            renderCategorias();
+
+            renderProdutos();
+
+        };
+
+        container.appendChild(button);
+
+    });
+
+}
+
+
+/* =========================================================
+   PRODUTOS
+========================================================= */
+
+function renderProdutos(){
+
+    const container =
+        document.getElementById("products");
+
+    let listaProdutos = produtos;
+
+    if(categoriaAtual !== "Todos"){
+
+        listaProdutos =
+            produtos.filter(
+                produto =>
+                    produto.categoria === categoriaAtual
+            );
+
+    }
+
+    container.innerHTML = "";
+
+    listaProdutos.forEach(produto => {
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "product";
+
+        div.onclick = () =>
+            abrirModal(produto);
+
+        div.innerHTML = `
+
+            <div class="product-icon">
+                ${produto.emoji}
+            </div>
+
+            <div class="product-name">
+                ${escapeHTML(produto.nome)}
+            </div>
+
+            <div class="product-category">
+                ${escapeHTML(produto.categoria)}
+            </div>
+
+            <button
+                class="add-product"
+                type="button"
+            >
+                + ADICIONAR
+            </button>
+
+        `;
+
+        container.appendChild(div);
+
+    });
+
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+function abrirModal(produto){
+
+    produtoSelecionado =
+        produto;
+
+    document.getElementById("modalIcon")
+        .textContent =
+        produto.emoji;
+
+    document.getElementById("modalTitle")
+        .textContent =
+        produto.nome;
+
+    document.getElementById("modalCategory")
+        .textContent =
+        produto.categoria;
+
+    document.getElementById("modalQuantity")
+        .value = 1;
+
+    document.getElementById("modal")
+        .classList.add("show");
+
+    setTimeout(() => {
+
+        document.getElementById(
+            "modalQuantity"
+        ).focus();
+
+    },100);
+
+}
+
+
+/* =========================================================
+   FECHAR MODAL
+========================================================= */
+
+function fecharModal(){
+
+    document.getElementById("modal")
+        .classList.remove("show");
+
+    produtoSelecionado = null;
+
+}
+
+
+/* =========================================================
+   CONFIRMAR PRODUTO
+========================================================= */
+
+function confirmarProduto(){
+
+    if(!produtoSelecionado)
+        return;
+
+    const quantidade =
+        parseInt(
+            document.getElementById(
+                "modalQuantity"
+            ).value
+        ) || 1;
+
+    const existente =
+        lista.find(
+            item =>
+                item.nome === produtoSelecionado.nome
+        );
+
+    if(existente){
+
+        existente.quantidade += quantidade;
+
+    }else{
+
+        lista.push({
+
+            nome:
+                produtoSelecionado.nome,
+
+            categoria:
+                produtoSelecionado.categoria,
+
+            emoji:
+                produtoSelecionado.emoji,
+
+            quantidade:
+                quantidade
+
+        });
+
+    }
+
+    salvarDados();
+
+    renderLista();
+
+    fecharModal();
+
+    mostrarToast(
+        produtoSelecionado.nome +
+        " adicionado!"
+    );
+
+}
+
+
+/* =========================================================
+   RENDER LISTA
+========================================================= */
+
+function renderLista(){
+
+    const container =
+        document.getElementById("listItems");
+
+    if(!container)
+        return;
+
+    container.innerHTML = "";
+
+    if(lista.length === 0){
+
+        container.innerHTML = `
+
+            <div class="empty">
+
+                <div class="empty-icon">
+                    🛒
+                </div>
+
+                <div>
+                    Sua lista está vazia
+                </div>
+
+                <small>
+                    Adicione produtos ao lado
+                </small>
+
+            </div>
+
+        `;
+
+        atualizarEstatisticas();
+
+        return;
+
+    }
+
+    lista.forEach(
+        (item,index) => {
+
+            const div =
+                document.createElement("div");
+
+            div.className =
+                "list-item";
+
+            div.innerHTML = `
+
+                <div class="product-icon">
+                    ${item.emoji || "📦"}
+                </div>
+
+                <div class="item-info">
+
+                    <div class="item-name">
+                        ${escapeHTML(item.nome)}
+                    </div>
+
+                    <div class="item-category">
+                        ${escapeHTML(item.categoria || "")}
+                    </div>
+
+                </div>
+
+                <div class="quantity">
+
+                    <button
+                        class="qty-btn"
+                        onclick="alterarQuantidade(${index},-1)"
+                    >
+                        −
+                    </button>
+
+                    <span class="qty-number">
+                        ${item.quantidade}
+                    </span>
+
+                    <button
+                        class="qty-btn"
+                        onclick="alterarQuantidade(${index},1)"
+                    >
+                        +
+                    </button>
+
+                </div>
+
+                <button
+                    class="remove"
+                    onclick="removerItem(${index})"
+                >
+                    ×
+                </button>
+
+            `;
+
+            container.appendChild(div);
+
+        }
+    );
+
+    atualizarEstatisticas();
+
+}
+
+
+/* =========================================================
+   QUANTIDADE
+========================================================= */
+
+function alterarQuantidade(index,valor){
+
+    if(!lista[index])
+        return;
+
+    lista[index].quantidade += valor;
+
+    if(lista[index].quantidade <= 0){
+
+        lista.splice(index,1);
+
+    }
+
+    salvarDados();
+
+    renderLista();
+
+}
+
+
+/* =========================================================
+   REMOVER
+========================================================= */
+
+function removerItem(index){
+
+    if(!lista[index])
+        return;
+
+    lista.splice(index,1);
+
+    salvarDados();
+
+    renderLista();
+
+    mostrarToast(
+        "Item removido."
+    );
+
+}
+
+
+/* =========================================================
+   LIMPAR LISTA
+========================================================= */
+
+function limparLista(){
+
+    if(lista.length === 0){
+
+        mostrarToast(
+            "A lista já está vazia."
+        );
+
+        return;
+
+    }
+
+    const confirmar =
+        confirm(
+            "Deseja realmente limpar toda a lista?"
+        );
+
+    if(!confirmar)
+        return;
+
+    lista = [];
+
+    salvarDados();
+
+    renderLista();
+
+    mostrarToast(
+        "Lista limpa."
+    );
+
+}
+
+
+/* =========================================================
+   ESTATÍSTICAS
+========================================================= */
+
+function atualizarEstatisticas(){
+
+    const totalItens =
+        lista.length;
+
+    const totalQuantidade =
+        lista.reduce(
+            (total,item) =>
+                total + Number(item.quantidade || 0),
+            0
+        );
+
+    document.getElementById(
+        "totalItens"
+    ).textContent =
+        totalItens;
+
+    document.getElementById(
+        "totalQuantidade"
+    ).textContent =
+        totalQuantidade;
+
+}
+
+
+/* =========================================================
+   WHATSAPP
+========================================================= */
+
+function enviarWhatsApp(){
+
+    if(lista.length === 0){
+
+        mostrarToast(
+            "Adicione produtos primeiro."
+        );
+
+        return;
+
+    }
+
+    let mensagem =
+        "🍕 *RAVENNA PIZZARIA*%0A";
+
+    mensagem +=
+        "🛒 *LISTA DE COMPRAS*%0A";
+
+    mensagem +=
+        "━━━━━━━━━━━━━━━━%0A";
+
+    mensagem +=
+        "%0A";
+
+    lista.forEach(
+        item => {
+
+            mensagem +=
+                `${item.emoji || "📦"} ` +
+                `*${item.nome}* — ` +
+                `${item.quantidade}%0A`;
+
+        }
+    );
+
+    mensagem +=
+        "%0A━━━━━━━━━━━━━━━━%0A";
+
+    mensagem +=
+        `👤 Funcionário: ` +
+        `${usuarioAtual?.nome || "Não informado"}%0A`;
+
+    mensagem +=
+        `📦 Total de itens: ` +
+        `${lista.length}%0A`;
+
+    mensagem +=
+        `🔢 Quantidade total: ` +
+        `${lista.reduce(
+            (t,i) => t + Number(i.quantidade || 0),
+            0
+        )}%0A`;
+
+    const observacao =
+        document.getElementById(
+            "observacao"
+        ).value.trim();
+
+    if(observacao){
+
+        mensagem +=
+            `%0A📝 *Observação:*%0A` +
+            encodeURIComponent(
+                observacao
+            );
+
+    }
+
+    const url =
+        "https://wa.me/" +
+        numeroWhatsApp +
+        "?text=" +
+        mensagem;
+
+    window.open(
+        url,
+        "_blank"
+    );
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function mostrarToast(texto){
+
+    const toast =
+        document.getElementById("toast");
+
+    toast.textContent =
+        texto;
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    },2500);
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(text){
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================================================
+   MENU MOBILE
+========================================================= */
+
+function toggleSidebar(){
+
+    document
+        .getElementById("sidebar")
+        .classList.toggle("open");
+
+}
+
+
+/* =========================================================
+   MODAL CLICANDO FORA
+========================================================= */
+
+document
+    .getElementById("modal")
+    .addEventListener(
+        "click",
+        function(event){
+
+            if(event.target === this){
+
+                fecharModal();
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   ENTER NO LOGIN
+========================================================= */
+
+document
+    .getElementById("senha")
+    .addEventListener(
+        "keydown",
+        function(event){
+
+            if(event.key === "Enter"){
+
+                entrar();
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   INICIALIZAÇÃO
+========================================================= */
+
+window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        carregarFuncionarios();
+
+        renderCategorias();
+
+        renderProdutos();
+
+        /*
+            Splash por aproximadamente 1,8 segundos.
+        */
+
+        setTimeout(() => {
+
+            document
+                .getElementById("splash")
+                .style.opacity = "0";
+
+            setTimeout(() => {
+
+                document
+                    .getElementById("splash")
+                    .style.display = "none";
+
+                verificarLogin();
+
+            },500);
+
+        },1800);
+
+    }
+);
+
+
+/* =========================================================
+   VERIFICAR LOGIN SALVO
+========================================================= */
+
+function verificarLogin(){
+
+    const salvo =
+        localStorage.getItem(
+            "ravenna_pizzaria_usuario"
+        );
+
+    if(!salvo){
+
+        document
+            .getElementById("loginScreen")
+            .style.display = "flex";
+
+        return;
+
+    }
+
+    try{
+
+        const usuario =
+            JSON.parse(salvo);
+
+        if(
+            !usuario.nome ||
+            !funcionarios[usuario.nome]
+        ){
+
+            localStorage.removeItem(
+                "ravenna_pizzaria_usuario"
+            );
+
+            document
+                .getElementById("loginScreen")
+                .style.display = "flex";
+
+            return;
+
+        }
+
+        usuarioAtual =
+            usuario;
+
+        document.getElementById(
+            "userName"
+        ).textContent =
+            usuario.nome;
+
+        document.getElementById(
+            "userRole"
+        ).textContent =
+            usuario.cargo;
+
+        document.getElementById(
+            "loginScreen"
+        ).style.display =
+            "none";
+
+        document.getElementById(
+            "app"
+        ).style.display =
+            "block";
+
+        iniciarFirebase();
+
+        renderLista();
+
+    }catch(error){
+
+        console.error(error);
+
+        localStorage.removeItem(
+            "ravenna_pizzaria_usuario"
+        );
+
+        document
+            .getElementById("loginScreen")
+            .style.display = "flex";
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
